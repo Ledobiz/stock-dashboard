@@ -22,6 +22,8 @@ import {
   type MacroIndicatorOut,
   type MacroObservationOut,
   type MacroSnapshotOut,
+  type MarketDataSettingsIn,
+  type MarketDataSettingsOut,
   type NotificationConfigOut,
   type NotificationOut,
   type NotificationPreferencesOut,
@@ -274,6 +276,28 @@ export function useUpdatePreferences() {
     mutationFn: (body: Partial<Pick<WorkspacePreferencesOut, "default_horizon" | "theme">>) =>
       api.put<WorkspacePreferencesOut>("/preferences", body),
     onSuccess: (data) => client.setQueryData(["preferences"], data),
+  });
+}
+
+// --- market data settings -------------------------------------------------------------------
+
+export function useMarketDataSettings() {
+  return useQuery({
+    queryKey: ["market-data-settings"],
+    queryFn: () => api.get<MarketDataSettingsOut>("/settings/market-data"),
+  });
+}
+
+export function useUpdateMarketDataSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: MarketDataSettingsIn) =>
+      api.put<MarketDataSettingsOut>("/settings/market-data", body),
+    onSuccess: (data) => {
+      client.setQueryData(["market-data-settings"], data);
+      // The status page shows which provider is in use.
+      void client.invalidateQueries({ queryKey: ["status"] });
+    },
   });
 }
 

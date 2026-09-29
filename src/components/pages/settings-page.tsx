@@ -15,6 +15,7 @@ import {
 } from "@/lib/queries";
 import { useWorkspace } from "@/lib/workspace-context";
 import { PageHeader } from "./common";
+import { MarketDataSettings } from "./market-data-settings";
 
 export function SettingsPage() {
   const { theme, toggleTheme, defaultHorizon } = useWorkspace();
@@ -125,6 +126,7 @@ export function SettingsPage() {
             More alert settings <ArrowRight size={14} />
           </Link>
         </section>
+        <MarketDataSettings />
         <section className="settings-panel">
           <div className="eyebrow">CONNECTION STATES</div>
           <h2>Integrations</h2>

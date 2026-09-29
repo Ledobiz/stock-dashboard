@@ -778,6 +778,36 @@ export type NotificationConfigOut = {
   urgent_cooldown_minutes: number;
 };
 
+export type MarketDataProviderOut = {
+  code: string;
+  label: string;
+  key_name: string | null;
+  key_configured: boolean;
+  selectable: boolean;
+  note: string | null;
+};
+
+export type MarketDataValues = {
+  provider: string;
+  history_requests_per_run: number;
+  min_request_interval_seconds: number;
+  skip_current_history: boolean;
+};
+
+export type MarketDataSettingsOut = {
+  effective: MarketDataValues;
+  environment: MarketDataValues;
+  overridden: (keyof MarketDataValues)[];
+  providers: MarketDataProviderOut[];
+  warning: string | null;
+  updated_at: string | null;
+};
+
+// null clears a saved value, so the server environment's applies again.
+export type MarketDataSettingsIn = {
+  [K in keyof MarketDataValues]?: MarketDataValues[K] | null;
+};
+
 // --- scanner ------------------------------------------------------------------------------
 
 export type ScanOut = {
