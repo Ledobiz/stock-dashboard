@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, ChevronRight, Send } from "lucide-react";
+import { Bell, BellRing, ChevronRight, Send } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import type { ApiAction, ApiHorizon, NotificationOut, NotificationPreferencesOut } from "@/lib/api";
@@ -19,6 +19,7 @@ import {
   useSendTestNotification,
   useUpdateNotificationPreferences,
 } from "@/lib/queries";
+import { enablePush, pushSubscribed, pushSupported, PUSH_EXTERNAL_ID } from "@/lib/push";
 import { EmptyState, ErrorState, LoadingState } from "../market-ui";
 import { PageHeader } from "./common";
 
@@ -84,6 +85,28 @@ function PreferencesForm({ prefs }: { prefs: NotificationPreferencesOut }) {
   const [form, setForm] = useState(prefs);
   const [quiet, setQuiet] = useState(!!prefs.quiet_hours_start);
   const [saved, setSaved] = useState(false);
+  const [pushState, setPushState] = useState<"idle" | "working" | "on">("idle");
+  const [pushError, setPushError] = useState<string | null>(null);
+  const appId = config.data?.onesignal_app_id ?? null;
+  useEffect(() => {
+    if (!appId) return;
+    pushSubscribed(appId)
+      .then((on) => on && prefs.push_external_id === PUSH_EXTERNAL_ID && setPushState("on"))
+      .catch(() => undefined);
+  }, [appId, prefs.push_external_id]);
+  const turnOnPush = async () => {
+    if (!appId) return;
+    setPushError(null);
+    setPushState("working");
+    try {
+      await enablePush(appId);
+      await update.mutateAsync({ push_external_id: PUSH_EXTERNAL_ID });
+      setPushState("on");
+    } catch (e) {
+      setPushState("idle");
+      setPushError(e instanceof Error ? e.message : "Could not enable push on this device.");
+    }
+  };
   useEffect(() => {
     setForm(prefs);
     setQuiet(!!prefs.quiet_hours_start);
@@ -228,6 +251,24 @@ function PreferencesForm({ prefs }: { prefs: NotificationPreferencesOut }) {
       </Button>
       {saved && <p className="positive small">Saved.</p>}
       {update.error && <p className="negative small">{update.error.message}</p>}
+      <Button
+        type="button"
+        variant="outline"
+        disabled={!appId || !pushSupported() || pushState !== "idle"}
+        onClick={() => void turnOnPush()}
+      >
+        <BellRing size={15} />{" "}
+        {pushState === "working"
+          ? "Enabling…"
+          : pushState === "on"
+            ? "Push enabled on this device"
+            : "Enable push on this device"}
+      </Button>
+      {!appId && <p className="muted small">Push is not configured on the server.</p>}
+      {appId && !pushSupported() && (
+        <p className="muted small">This browser does not support web push.</p>
+      )}
+      {pushError && <p className="negative small">{pushError}</p>}
       <Button
         type="button"
         variant="outline"
