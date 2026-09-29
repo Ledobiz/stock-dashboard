@@ -1,0 +1,3 @@
+- [x] Build connected dashboard, scanner, signals, watchlist, stock detail, portfolio, events, macro, backtests, notifications, sources, settings and private-login preview.
+- [x] Isolate sample market data and keep future API integration clean.
+- [x] Verify desktop/mobile presentation and interactions.
