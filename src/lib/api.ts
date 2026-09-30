@@ -785,25 +785,48 @@ export type MarketDataProviderOut = {
   key_configured: boolean;
   selectable: boolean;
   note: string | null;
+  // The roles it can serve: latest, universe, latest_fallback, history, snapshot, disclosures, stream.
+  roles: string[];
 };
 
 export type MarketDataValues = {
   provider: string;
+  // null: the primary.
+  universe_provider: string | null;
+  // A snapshot provider, or "none".
+  snapshot_provider: string;
+  history_providers: string[];
+  latest_fallback_providers: string[];
+  disclosures_enabled: boolean;
+  stream_enabled: boolean;
   history_requests_per_run: number;
   min_request_interval_seconds: number;
   skip_current_history: boolean;
 };
 
+// Who serves each role now, after skipping disabled or keyless providers.
+export type MarketDataRoles = {
+  latest: string;
+  universe: string;
+  latest_fallbacks: string[];
+  history: string[];
+  snapshot: string | null;
+  disclosures: boolean;
+  stream: boolean;
+};
+
 export type MarketDataSettingsOut = {
   effective: MarketDataValues;
   environment: MarketDataValues;
+  roles: MarketDataRoles;
   overridden: (keyof MarketDataValues)[];
   providers: MarketDataProviderOut[];
   warning: string | null;
   updated_at: string | null;
 };
 
-// null clears a saved value, so the server environment's applies again.
+// null clears a saved value, so the server environment's applies again. An empty chain is a
+// deliberate "none".
 export type MarketDataSettingsIn = {
   [K in keyof MarketDataValues]?: MarketDataValues[K] | null;
 };
